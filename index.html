@@ -485,7 +485,7 @@
 </div>
 
 <!-- WIZARD -->
-<div id="wiz-bg" class="modal-bg" style="display:none;">
+<div id="wiz-bg" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeWizard()">
   <div class="modal-box" style="max-width:560px;padding:0;overflow:hidden;" onclick="event.stopPropagation()">
     <div id="wiz-body"></div>
   </div>
@@ -1021,14 +1021,27 @@ function renderWiz(){
     '</div>';
   }).join('');
   var body=w.step===1?wizS1():w.step===2?wizS2():wizS3();
-  var foot=w.step<3?'<div style="display:flex;gap:12px;padding:0 24px 24px;">' +
-    '<button class="btn-s" style="flex:1;" onclick="'+(w.step===1?'closeWizard()':'wizBack()')+'>'+(w.step===1?'Cancel':'← Back')+'</button>' +
-    '<button id="wiz-next" class="btn-p" style="flex:1;" onclick="wizNext()">'+(w.step===2?'Add Member →':'Continue →')+'</button>' +
-  '</div>':'';
+  var foot='';
+  if(w.step===1){
+    foot='<div style="display:flex;gap:10px;padding:0 20px 20px;">' +
+      '<button class="btn-s" style="flex:1;" onclick="closeWizard()">Cancel</button>' +
+      '<button id="wiz-next" class="btn-p" style="flex:2;" onclick="wizNext()">Continue →</button>' +
+    '</div>';
+  } else if(w.step===2){
+    foot='<div style="display:flex;gap:10px;padding:0 20px 20px;flex-wrap:wrap;">' +
+      '<button class="btn-s" style="flex:1;min-width:80px;" onclick="wizBack()">← Back</button>' +
+      '<button id="wiz-next" class="btn-p" style="flex:2;min-width:120px;" onclick="wizNext()">Add Member →</button>' +
+      '<div style="width:100%;text-align:center;padding-top:4px;"><button onclick="closeWizard()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;">Cancel</button></div>' +
+    '</div>';
+  }
   document.getElementById('wiz-body').innerHTML=
     '<div style="height:4px;background:#e8d5ec;"><div style="height:4px;background:var(--primary);width:'+prog+'%;transition:width .3s;"></div></div>' +
-    '<div style="display:flex;align-items:center;gap:6px;padding:14px 24px 6px;">'+steps+'</div>' +
-    '<div style="padding:8px 24px 16px;">'+body+'</div>' + foot;
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 4px;">' +
+      '<div style="display:flex;align-items:center;gap:6px;">'+steps+'</div>' +
+      '<button onclick="closeWizard()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:4px 6px;min-width:36px;min-height:36px;border-radius:8px;" title="Close">×</button>' +
+    '</div>' +
+    '<div id="wiz-err" style="display:none;margin:0 20px 8px;padding:10px 14px;background:#fff0f0;border:1px solid #f5c0c0;border-radius:8px;font-size:13px;color:var(--error);"></div>' +
+    '<div style="padding:4px 20px 12px;">'+body+'</div>' + foot;
 }
 function wizS1(){
   var ar=S.roles.length>0?S.roles.map(function(r){return r.name;}):['Manager','Designer','Developer','Operations','Marketing','HR'];
@@ -1077,21 +1090,42 @@ function wizS3(){
     '</div></div>';
 }
 function emailFromWiz(){var last=S.team.length>0?S.team[S.team.length-1]:null;closeWizard();if(last)openEmailModal(String(last.id));}
+function wizErr(msg){
+  var el=document.getElementById('wiz-err');
+  if(el){el.textContent='⚠️ '+msg;el.style.display='block';}
+  toast(msg,'err');
+}
+function wizClearErr(){
+  var el=document.getElementById('wiz-err');
+  if(el){el.style.display='none';el.textContent='';}
+}
 function wizNext(){
   var w=S.wiz;
-  if(w.step===1){if(!w.role){toast('Please select a role','err');return;}w.step=2;renderWiz();}
-  else if(w.step===2){
+  wizClearErr();
+  if(w.step===1){
+    if(!w.role){wizErr('Please select a role to continue.');return;}
+    w.step=2;renderWiz();
+  } else if(w.step===2){
     savWiz();
-    if(!w.name.trim()){toast('Name is required','err');return;}
-    if(!w.email.trim()){toast('Email is required','err');return;}
-    var btn=document.getElementById('wiz-next');if(btn){btn.disabled=true;btn.textContent='Adding...';}
+    if(!w.name.trim()){wizErr('Full name is required.');return;}
+    if(!w.email.trim()){wizErr('Email address is required.');return;}
+    var btn=document.getElementById('wiz-next');
+    if(btn){btn.disabled=true;btn.textContent='Adding...';}
     api('ADD_MEMBER',{name:w.name,email:w.email,role:w.role,tools:w.tools.join(','),materials:w.materials.join(',')})
       .then(function(){ return api('GET_TEAM'); })
-      .then(function(team){ S.team=team||[]; w.step=3; renderWiz(); })
-      .catch(function(e){ toast(e.message,'err');if(btn){btn.disabled=false;btn.textContent='Add Member →';} });
+      .then(function(team){
+        S.team=team||[];
+        w.step=3;
+        renderWiz();
+      })
+      .catch(function(e){
+        var msg=e.message||'Could not add member. Check your GAS deployment.';
+        wizErr(msg);
+        if(btn){btn.disabled=false;btn.textContent='Add Member →';}
+      });
   }
 }
-function wizBack(){S.wiz.step--;renderWiz();}
+function wizBack(){wizClearErr();S.wiz.step--;renderWiz();}
 
 /* ═══════════════════════════════════════
    EMAIL GENERATOR

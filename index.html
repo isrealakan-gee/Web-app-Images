@@ -500,14 +500,20 @@
 ═══════════════════════════════════════ */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxeIWL8yixQvySGsMYupEuet5D0ppEc5e15YUksUc4zjCxTYQYmqwxxSYF0vREnXL1E/exec';
 
-/* API helper — POST to GAS backend */
+/* API helper — uses GET with URL params (works cross-origin from GitHub Pages) */
 function api(action, payload) {
-  return fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight
-    body: JSON.stringify({ action: action, payload: payload || {} })
+  var params = new URLSearchParams({
+    action: action,
+    payload: JSON.stringify(payload || {})
+  });
+  return fetch(GAS_URL + '?' + params.toString(), {
+    method: 'GET',
+    redirect: 'follow'
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
   .then(function(r) {
     if (r && r.success === false) throw new Error(r.error || 'Server error');
     return (r && r.data !== undefined) ? r.data : r;

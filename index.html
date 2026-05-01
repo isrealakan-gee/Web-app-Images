@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>HikeHER Onboarding Dashboard</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; height: -webkit-fill-available; }
+
+    /* ── Brand Variables ── */
+    :root {
+      --primary:       #9E2DC0;
+      --primary-h:     #7D2399;
+      --primary-l:     #C382D6;
+      --bg:            #EDE1EE;
+      --card:          #FFFFFF;
+      --alt-bg:        #F6F1F8;
+      --accent:        #FF40B5;
+      --cta:           #E6571C;
+      --soft-accent:   #FFD9F3;
+      --soft-cta:      #FFE1D6;
+      --text:          #2A2A2A;
+      --text2:         #6B6B6B;
+      --muted:         #9A9A9A;
+      --border:        #E3D9E6;
+      --success:       #28C76F;
+      --warning:       #FF9F43;
+      --error:         #EA5455;
+      --info:          #00CFE8;
+      --sidebar:       rgba(42,10,58,0.92);
+      --r:             10px;
+    }
+
+    /* ── Base ── */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      background: linear-gradient(135deg, #ede1ee 0%, #e6d5ec 50%, #f5d9f3 100%);
+      background-attachment: fixed;
+      min-height: 100vh; min-height: 100dvh;
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ── Layout Shell ── */
+    #app { display: flex; min-height: 100vh; min-height: 100dvh; }
+
+    /* ── Sidebar (desktop) ── */
+    #sidebar {
+      width: 220px; flex-shrink: 0;
+      position: fixed; top: 0; left: 0;
+      height: 100vh; height: 100dvh;
+      background: var(--sidebar);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(195,130,214,0.18);
+      display: flex; flex-direction: column;
+      z-index: 50; transition: transform 0.25s ease;
+    }
+    .sb-logo {
+      padding: 22px 18px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-ico {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: var(--primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: #fff; font-size: 15px;
+    }
+    #sidebar nav {
+      flex: 1; padding: 12px 10px;
+      display: flex; flex-direction: column; gap: 2px; overflow-y: auto;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: 8px; cursor: pointer;
+      color: rgba(255,255,255,0.62); font-size: 14px; font-weight: 500;
+      transition: all 0.15s; border: none; background: none;
+      width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-item.active { background: rgba(158,45,192,0.38); color: #fff; }
+    .sb-foot {
+      padding: 14px; border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center; font-size: 11px; color: rgba(255,255,255,0.28);
+    }
+
+    /* ── Main ── */
+    #main { flex: 1; margin-left: 220px; }
+    #content { padding: 32px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── Mobile Header ── */
+    #mob-hdr {
+      display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 40;
+      padding-top: env(safe-area-inset-top);
+    }
+    #mob-menu-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 22px; padding: 6px; color: var(--text);
+    }
+
+    /* ── Mobile Overlay ── */
+    #mob-ov {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 45;
+    }
+
+    /* ── Mobile Bottom Nav ── */
+    #mob-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 6px 2px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 40; justify-content: space-around;
+    }
+    .mnav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 10px; font-weight: 500;
+      padding: 4px 8px; border-radius: 8px; min-width: 44px;
+      transition: color 0.15s;
+    }
+    .mnav-item .ni { font-size: 19px; line-height: 1.1; }
+    .mnav-item.active { color: var(--primary); }
+
+    /* ── Glass ── */
+    .glass {
+      background: rgba(255,255,255,0.74);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.65);
+      box-shadow: 0 8px 32px rgba(158,45,192,0.08);
+    }
+
+    /* ── Buttons ── */
+    .btn-p {
+      background: var(--primary); color: #fff;
+      padding: 10px 18px; border-radius: var(--r);
+      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+      transition: all 0.15s; min-height: 44px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-p:hover { background: var(--primary-h); transform: scale(1.02); }
+    .btn-p:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-s {
+      background: rgba(255,255,255,0.85); color: var(--text);
+      padding: 10px 18px; border-radius: var(--r);
+      font-size: 14px; font-weight: 600;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: all 0.15s; min-height: 44px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-s:hover { background: #fff; border-color: var(--primary-l); }
+    .btn-d {
+      background: var(--error); color: #fff;
+      padding: 10px 18px; border-radius: var(--r);
+      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+      min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-icon {
+      background: none; border: none; cursor: pointer;
+      padding: 7px 9px; border-radius: 7px;
+      transition: background 0.15s; color: var(--text2);
+      font-size: 16px; line-height: 1;
+    }
+    .btn-icon:hover { background: rgba(0,0,0,0.06); }
+    .btn-sm {
+      padding: 6px 12px !important; min-height: 36px !important; font-size: 12px !important;
+    }
+
+    /* ── Inputs ── */
+    .inp {
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.88);
+      font-size: 14px; outline: none; min-height: 44px;
+      font-family: inherit; color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .inp:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(158,45,192,0.12); }
+    select.inp { cursor: pointer; }
+    .lbl { font-size: 13px; font-weight: 500; display: block; margin-bottom: 6px; }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .b-green  { background: #dcfce7; color: #166534; }
+    .b-gray   { background: #f3f4f6; color: #6b7280; }
+    .b-purple { background: #f3d9fb; color: #7D2399; }
+    .b-blue   { background: #dbeafe; color: #1e40af; }
+    .b-pink   { background: #FFD9F3; color: #9d174d; }
+    .b-sky    { background: #e0f9fe; color: #0369a1; }
+    .b-orange { background: #FFE1D6; color: #c2410c; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 11px 16px;
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      background: rgba(0,0,0,0.025); border-bottom: 1px solid var(--border);
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(158,45,192,0.02); }
+
+    /* ── Stat Cards ── */
+    .stat-card {
+      background: rgba(255,255,255,0.74);
+      backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.65);
+      box-shadow: 0 8px 28px rgba(158,45,192,0.07);
+      border-radius: 16px; padding: 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .stat-ico {
+      width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0; color: #fff;
+    }
+
+    /* ── Progress ── */
+    .prog-bar { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+    .prog-fill { height: 100%; background: var(--primary); border-radius: 6px; transition: width 0.4s ease; }
+
+    /* ── Spinner ── */
+    .spinner { width: 28px; height: 28px; border: 3px solid rgba(158,45,192,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal ── */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px); display: flex;
+      align-items: center; justify-content: center; z-index: 100; padding: 16px;
+    }
+    .modal-box {
+      background: rgba(255,255,255,0.97); border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 20px; padding: 28px;
+      width: 100%; max-width: 500px; max-height: 92dvh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(158,45,192,0.15);
+    }
+
+    /* ── Toast ── */
+    .toast-el {
+      position: fixed; top: 20px; right: 16px;
+      padding: 12px 20px; border-radius: var(--r);
+      font-size: 14px; font-weight: 500;
+      z-index: 999; display: none; animation: slIn .3s ease;
+      max-width: calc(100vw - 32px); white-space: nowrap;
+    }
+    .t-ok  { background: #1c1c1c; color: #fff; }
+    .t-err { background: var(--error); color: #fff; }
+    @keyframes slIn { from { transform: translateX(110%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+    /* ── Tags ── */
+    .tag { display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; background: #f3d9fb; color: var(--primary-h); border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .tag-x { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 14px; line-height: 1; padding: 0 2px; }
+
+    /* ── Role cards ── */
+    .role-card { background: rgba(255,255,255,0.75); border: 2px solid transparent; border-radius: 12px; padding: 14px 8px; cursor: pointer; transition: all .2s; text-align: center; }
+    .role-card:hover { transform: scale(1.04); border-color: var(--primary-l); }
+    .role-card.sel { border-color: var(--primary); background: rgba(158,45,192,0.07); box-shadow: 0 0 0 4px rgba(158,45,192,0.1); }
+
+    /* ── Toggle buttons ── */
+    .tog-btn { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; transition: all .15s; }
+    .tog-btn.on   { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .tog-btn.on-v { background: var(--primary-l); color: #fff; border-color: var(--primary-l); }
+
+    /* ── Checklist ── */
+    .chk-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r); border: 1px solid var(--border); background: rgba(255,255,255,0.6); cursor: pointer; transition: all .15s; margin-bottom: 8px; }
+    .chk-item:hover { background: rgba(255,255,255,0.92); border-color: var(--primary-l); }
+    .chk-item.done { opacity: .55; }
+
+    /* ── Page header ── */
+    .pg-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+    .pg-hdr h1 { font-size: clamp(1.15rem,4vw,1.6rem); font-weight: 700; margin: 0 0 4px; }
+    .pg-hdr p  { color: var(--text2); font-size: 14px; margin: 0; }
+
+    /* ── Mobile cards ── */
+    .mob-card { padding: 16px; border-bottom: 1px solid var(--border); }
+    .mob-card:last-child { border-bottom: none; }
+
+    /* ── Responsive ── */
+    @media (max-width: 767px) {
+      #sidebar { transform: translateX(-100%); }
+      #mob-hdr { display: flex !important; }
+      #mob-nav { display: flex !important; }
+      #main {
+        margin-left: 0;
+        padding-top: calc(56px + env(safe-area-inset-top));
+        padding-bottom: calc(72px + env(safe-area-inset-bottom));
+      }
+      #content { padding: 14px; }
+      .desk-only { display: none !important; }
+      .pg-hdr { flex-direction: column; }
+      .pg-hdr .pg-btn { width: 100%; justify-content: center; }
+      .modal-box { padding: 20px; }
+    }
+    @media (min-width: 768px) {
+      #mob-hdr, #mob-nav, #mob-ov { display: none !important; }
+      #sidebar { transform: translateX(0) !important; }
+      .mob-only { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-logo">
+      <div class="logo-ico">H</div>
+      <div>
+        <div style="font-weight:700;color:#fff;font-size:14px;">HikeHER</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.42);">Onboarding</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-item" id="nav-dashboard"  onclick="go('dashboard')">📊 Dashboard</button>
+      <button class="nav-item" id="nav-team"        onclick="go('team')">👥 Team</button>
+      <button class="nav-item" id="nav-tools"       onclick="go('tools')">🔧 Tools</button>
+      <button class="nav-item" id="nav-materials"   onclick="go('materials')">📚 Materials</button>
+      <button class="nav-item" id="nav-roles"       onclick="go('roles')">🛡️ Roles</button>
+      <button class="nav-item" id="nav-offboarding" onclick="go('offboarding')">🚪 Offboarding</button>
+    </nav>
+    <div class="sb-foot">HikeHER © 2025</div>
+  </aside>
+
+  <!-- MOBILE HEADER -->
+  <div id="mob-hdr">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="logo-ico" style="width:29px;height:29px;font-size:12px;">H</div>
+      <span style="font-weight:700;font-size:15px;">HikeHER</span>
+    </div>
+    <button id="mob-menu-btn" onclick="toggleSb()">☰</button>
+  </div>
+
+  <!-- MOBILE OVERLAY -->
+  <div id="mob-ov" onclick="closeSb()"></div>
+
+  <!-- MAIN -->
+  <main id="main">
+    <div id="content" style="display:flex;justify-content:center;padding:80px 20px;">
+      <div class="spinner"></div>
+    </div>
+  </main>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav id="mob-nav">
+    <button class="mnav-item" id="mnav-dashboard"  onclick="go('dashboard')"><span class="ni">📊</span>Home</button>
+    <button class="mnav-item" id="mnav-team"        onclick="go('team')"><span class="ni">👥</span>Team</button>
+    <button class="mnav-item" id="mnav-tools"       onclick="go('tools')"><span class="ni">🔧</span>Tools</button>
+    <button class="mnav-item" id="mnav-materials"   onclick="go('materials')"><span class="ni">📚</span>Docs</button>
+    <button class="mnav-item" id="mnav-roles"       onclick="go('roles')"><span class="ni">🛡️</span>Roles</button>
+    <button class="mnav-item" id="mnav-offboarding" onclick="go('offboarding')"><span class="ni">🚪</span>Off-board</button>
+  </nav>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()"><div id="modal-body"></div></div>
+</div>
+
+<!-- WIZARD -->
+<div id="wiz-bg" class="modal-bg" style="display:none;">
+  <div class="modal-box" style="max-width:560px;padding:0;overflow:hidden;" onclick="event.stopPropagation()">
+    <div id="wiz-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast-el"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   STATE & LOCAL STORAGE
+═══════════════════════════════════════ */
+var LS = 'hikeher_v1';
+var S = {
+  page:'dashboard', team:[], tools:[], materials:[],
+  roles:[], offboarding:[],
+  wiz:{step:1,role:'',name:'',email:'',tools:[],materials:[]},
+  offId:'', emailId:'', matFilter:''
+};
+
+function persist() {
+  localStorage.setItem(LS, JSON.stringify({
+    team:S.team, tools:S.tools, materials:S.materials,
+    roles:S.roles, offboarding:S.offboarding
+  }));
+}
+
+function hydrate() {
+  var raw = localStorage.getItem(LS);
+  if (raw) {
+    try {
+      var d = JSON.parse(raw);
+      S.team=d.team||[]; S.tools=d.tools||[];
+      S.materials=d.materials||[]; S.roles=d.roles||[];
+      S.offboarding=d.offboarding||[];
+    } catch(e){ seed(); persist(); }
+  } else { seed(); persist(); }
+}
+
+function seed() {
+  var t = Date.now();
+  S.tools = [
+    {id:t+1,  name:'Dropbox',      category:'Storage',            link:'https://dropbox.com',        notes:''},
+    {id:t+2,  name:'Google Drive', category:'Storage',            link:'https://drive.google.com',   notes:''},
+    {id:t+3,  name:'Jira',         category:'Project Management', link:'https://atlassian.com/jira', notes:''},
+    {id:t+4,  name:'Slack',        category:'Communication',      link:'https://slack.com',          notes:''},
+    {id:t+5,  name:'Canva',        category:'Design',             link:'https://canva.com',          notes:''},
+    {id:t+6,  name:'JotForm',      category:'Other',              link:'https://jotform.com',        notes:''},
+    {id:t+7,  name:'Instagram',    category:'Social Media',       link:'https://instagram.com',      notes:''},
+    {id:t+8,  name:'TikTok',       category:'Social Media',       link:'https://tiktok.com',         notes:''},
+    {id:t+9,  name:'Eventbrite',   category:'Other',              link:'https://eventbrite.com',     notes:''},
+    {id:t+10, name:'Wix',          category:'Other',              link:'https://wix.com',            notes:''},
+  ];
+  S.materials = [
+    {id:t+20,title:'Team SOP',             link:'',assignedRole:'Manager'},
+    {id:t+21,title:'Leadership Guide',     link:'',assignedRole:'Manager'},
+    {id:t+22,title:'Brand Guidelines',     link:'',assignedRole:'Designer'},
+    {id:t+23,title:'Design SOP',           link:'',assignedRole:'Designer'},
+    {id:t+24,title:'Tech Onboarding Guide',link:'',assignedRole:'Developer'},
+    {id:t+25,title:'HR Handbook',          link:'',assignedRole:'HR'},
+    {id:t+26,title:'Onboarding SOP',       link:'',assignedRole:'HR'},
+    {id:t+27,title:'Marketing Guide',      link:'',assignedRole:'Marketing'},
+    {id:t+28,title:'Social Media SOP',     link:'',assignedRole:'Marketing'},
+    {id:t+29,title:'Ops SOP',              link:'',assignedRole:'Operations'},
+  ];
+  S.roles = [
+    {name:'Manager',    defaultTools:['Slack','Jira','Google Drive'],                 defaultMaterials:['Team SOP','Leadership Guide']},
+    {name:'Designer',   defaultTools:['Canva','Dropbox','Slack'],                     defaultMaterials:['Brand Guidelines','Design SOP']},
+    {name:'Developer',  defaultTools:['Jira','Google Drive','Slack'],                 defaultMaterials:['Tech Onboarding Guide']},
+    {name:'Operations', defaultTools:['Google Drive','JotForm','Slack','Eventbrite'], defaultMaterials:['Ops SOP']},
+    {name:'Marketing',  defaultTools:['Canva','Instagram','TikTok','Wix'],            defaultMaterials:['Marketing Guide','Social Media SOP']},
+    {name:'HR',         defaultTools:['Google Drive','Slack','JotForm'],              defaultMaterials:['HR Handbook','Onboarding SOP']},
+  ];
+  S.team=[]; S.offboarding=[];
+}
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function uid() { return Date.now()+Math.floor(Math.random()*9999); }
+function fv(id) { var el=document.getElementById(id); return el?el.value.trim():''; }
+function prev(s,n) {
+  var a = Array.isArray(s) ? s : (s||'').split(',').map(function(x){return x.trim();});
+  a = a.filter(Boolean); n=n||2;
+  return a.slice(0,n).join(', ')+(a.length>n?' +'+(a.length-n):'');
+}
+function toArr(s) {
+  if (Array.isArray(s)) return s.filter(Boolean);
+  return (s||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+}
+function catBadge(cat) {
+  var m={Communication:'b-sky',Design:'b-purple','Project Management':'b-blue','Social Media':'b-pink',Storage:'b-green',Other:'b-gray'};
+  return '<span class="badge '+(m[cat]||'b-gray')+'">'+esc(cat)+'</span>';
+}
+function lnkBtn(url,label) {
+  return url ? '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:none;">'+(label||'Visit ↗')+'</a>'
+             : '<span style="color:#ccc;">—</span>';
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function toast(msg,type) {
+  var el=document.getElementById('toast');
+  el.className='toast-el '+(type==='err'?'t-err':'t-ok');
+  el.textContent=msg; el.style.display='block';
+  clearTimeout(el._t); el._t=setTimeout(function(){el.style.display='none';},3000);
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function go(page) {
+  S.page=page;
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  var n=document.getElementById('nav-'+page); if(n)n.classList.add('active');
+  document.querySelectorAll('.mnav-item').forEach(function(el){el.classList.remove('active');});
+  var mn=document.getElementById('mnav-'+page); if(mn)mn.classList.add('active');
+  if(window.innerWidth<768) closeSb();
+  var c=document.getElementById('content');
+  if(page==='dashboard')   c.innerHTML=pgDash();
+  else if(page==='team')   c.innerHTML=pgTeam();
+  else if(page==='tools')  c.innerHTML=pgTools();
+  else if(page==='materials') c.innerHTML=pgMats();
+  else if(page==='roles')  c.innerHTML=pgRoles();
+  else if(page==='offboarding') c.innerHTML=pgOff();
+  window.scrollTo(0,0);
+}
+
+function toggleSb() {
+  var sb=document.getElementById('sidebar'), ov=document.getElementById('mob-ov');
+  var open=sb.style.transform==='translateX(0px)'||sb.style.transform==='translateX(0)';
+  if(open){closeSb();}else{sb.style.transform='translateX(0)';ov.style.display='block';document.body.style.overflow='hidden';}
+}
+function closeSb() {
+  document.getElementById('sidebar').style.transform='translateX(-100%)';
+  document.getElementById('mob-ov').style.display='none';
+  document.body.style.overflow='';
+}
+
+/* ═══════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════ */
+function pgDash() {
+  var active=S.team.filter(function(m){return m.status==='Active';}).length;
+  var mobRows = S.team.length===0
+    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No team members yet.</div>'
+    : S.team.slice(0,8).map(function(m){
+        return '<div class="mob-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">' +
+            '<div><p style="font-weight:600;margin:0 0 2px;">'+esc(m.name)+'</p>' +
+            '<p style="font-size:12px;color:var(--text2);margin:0;">'+esc(m.email)+'</p></div>' +
+            '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
+              '<span class="badge b-purple">'+esc(m.role)+'</span>' +
+              '<span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-top:10px;display:flex;gap:6px;">' +
+            '<button class="btn-s btn-sm" onclick="openEmailModal(\''+m.id+'\')">📧 Email</button>' +
+          '</div></div>';
+      }).join('');
+  var deskRows = S.team.length===0
+    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No team members yet — add your first!</td></tr>'
+    : S.team.slice(0,10).map(function(m){
+        return '<tr><td style="font-weight:500;">'+esc(m.name)+'</td><td style="color:var(--text2);font-size:13px;">'+esc(m.email)+'</td><td><span class="badge b-purple">'+esc(m.role)+'</span></td><td style="color:var(--text2);font-size:12px;">'+esc(prev(m.tools))+'</td><td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td></tr>';
+      }).join('');
+
+  return '<div class="pg-hdr">' +
+      '<div><h1>📊 Dashboard</h1><p>Welcome back — here\'s your team overview.</p></div>' +
+      '<button class="btn-p pg-btn" onclick="openWizard()">＋ Add Team Member</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px;">' +
+      statCard('👥','Active Members',active,'var(--primary)') +
+      statCard('🔧','Tools',S.tools.length,'var(--info)') +
+      statCard('📚','Materials',S.materials.length,'var(--cta)') +
+    '</div>' +
+    '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
+      '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">' +
+        '<span style="font-weight:600;">Team Members</span>' +
+        '<span style="font-size:13px;color:var(--muted);">'+S.team.length+' total</span>' +
+      '</div>' +
+      '<div class="mob-only">'+mobRows+'</div>' +
+      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Status</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+    '</div>';
+}
+function statCard(icon,label,val,bg) {
+  return '<div class="stat-card"><div class="stat-ico" style="background:'+bg+'">'+icon+'</div>' +
+    '<div><div style="font-size:28px;font-weight:700;">'+val+'</div><div style="font-size:13px;color:var(--text2);">'+label+'</div></div></div>';
+}
+
+/* ═══════════════════════════════════════
+   TEAM
+═══════════════════════════════════════ */
+function pgTeam() {
+  var mobCards = S.team.length===0
+    ? '<div style="padding:48px;text-align:center;color:var(--muted);">No members yet.</div>'
+    : S.team.map(function(m){
+        var tools=toArr(m.tools);
+        return '<div class="mob-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">' +
+            '<div><p style="font-weight:600;margin:0 0 2px;">'+esc(m.name)+'</p>' +
+            '<p style="font-size:12px;color:var(--text2);margin:0;">'+esc(m.email)+'</p></div>' +
+            '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
+              '<span class="badge b-purple">'+esc(m.role)+'</span>' +
+              '<span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span>' +
+            '</div>' +
+          '</div>' +
+          (tools.length ? '<p style="font-size:12px;color:var(--text2);margin:0 0 10px;">🔧 '+esc(prev(m.tools,3))+'</p>' : '') +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<button class="btn-s btn-sm" onclick="openEmailModal(\''+m.id+'\')">📧 Email</button>' +
+            '<button class="btn-s btn-sm" onclick="editMember(\''+m.id+'\')">✏️ Edit</button>' +
+            '<button class="btn-s btn-sm" style="color:var(--error);border-color:var(--error);" onclick="confirmDel(\'team\',\''+m.id+'\',\''+esc(m.name)+'\')">🗑️</button>' +
+          '</div></div>';
+      }).join('');
+  var deskRows = S.team.length===0
+    ? '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--muted);">No members yet.</td></tr>'
+    : S.team.map(function(m){
+        return '<tr><td style="font-weight:500;">'+esc(m.name)+'</td><td style="font-size:12px;color:var(--text2);">'+esc(m.email)+'</td><td><span class="badge b-purple">'+esc(m.role)+'</span></td><td style="font-size:12px;color:var(--text2);">'+esc(prev(m.tools))+'</td><td style="font-size:12px;color:var(--text2);">'+esc(prev(m.materials))+'</td><td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td>' +
+          '<td style="white-space:nowrap;"><button class="btn-icon" onclick="openEmailModal(\''+m.id+'\')">📧</button><button class="btn-icon" onclick="editMember(\''+m.id+'\')">✏️</button><button class="btn-icon" onclick="confirmDel(\'team\',\''+m.id+'\',\''+esc(m.name)+'\')" style="color:var(--error);">🗑️</button></td></tr>';
+      }).join('');
+
+  return '<div class="pg-hdr">' +
+      '<div><h1>👥 Team Members</h1><p>Manage your team, roles, and assignments.</p></div>' +
+      '<button class="btn-p pg-btn" onclick="openWizard()">＋ Add Member</button>' +
+    '</div>' +
+    '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
+      '<div class="mob-only">'+mobCards+'</div>' +
+      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Materials</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+    '</div>';
+}
+function editMember(id) {
+  var m=S.team.find(function(x){return String(x.id)===String(id);}); if(!m)return;
+  var ro=S.roles.map(function(r){return '<option value="'+esc(r.name)+'"'+(r.name===m.role?' selected':'')+'>'+esc(r.name)+'</option>';}).join('');
+  var tv=toArr(m.tools).join(', '), mv=toArr(m.materials).join(', ');
+  showModal('Edit Team Member',
+    '<div style="display:grid;gap:12px;">' +
+      '<div><label class="lbl">Name *</label><input class="inp" id="em-n" value="'+esc(m.name)+'"></div>' +
+      '<div><label class="lbl">Email *</label><input class="inp" type="email" id="em-e" value="'+esc(m.email)+'"></div>' +
+      '<div><label class="lbl">Role</label><select class="inp" id="em-r">'+ro+'</select></div>' +
+      '<div><label class="lbl">Tools <span style="color:var(--muted);font-weight:400;">(comma-separated)</span></label><input class="inp" id="em-t" value="'+esc(tv)+'"></div>' +
+      '<div><label class="lbl">Materials <span style="color:var(--muted);font-weight:400;">(comma-separated)</span></label><input class="inp" id="em-m" value="'+esc(mv)+'"></div>' +
+      '<div><label class="lbl">Status</label><select class="inp" id="em-s"><option'+(m.status==='Active'?' selected':'')+'>Active</option><option'+(m.status==='Inactive'?' selected':'')+'>Inactive</option></select></div>' +
+    '</div>',
+    function(){
+      var nm=fv('em-n'),em=fv('em-e');
+      if(!nm||!em){toast('Name and email required','err');return;}
+      var idx=S.team.findIndex(function(x){return String(x.id)===String(id);});
+      if(idx>=0){S.team[idx]={id:m.id,name:nm,email:em,role:fv('em-r'),tools:toArr(fv('em-t')),materials:toArr(fv('em-m')),status:fv('em-s')};}
+      persist();toast('✅ Member updated');closeModal();go('team');
+    },'Save Changes');
+}
+
+/* ═══════════════════════════════════════
+   TOOLS
+═══════════════════════════════════════ */
+var CATS=['Communication','Design','Project Management','Social Media','Storage','Other'];
+function pgTools() {
+  var mobCards = S.tools.length===0
+    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No tools yet.</div>'
+    : S.tools.map(function(t){
+        return '<div class="mob-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
+            '<div><p style="font-weight:600;margin:0 0 2px;">'+esc(t.name)+'</p>' +
+            (t.link?'<a href="'+esc(t.link)+'" target="_blank" style="font-size:12px;color:var(--primary);text-decoration:none;">Visit ↗</a>':'')+'</div>' +
+            catBadge(t.category) +
+          '</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn-s btn-sm" onclick="editTool(\''+t.id+'\')">✏️ Edit</button>' +
+            '<button class="btn-s btn-sm" style="color:var(--error);border-color:var(--error);" onclick="confirmDel(\'tool\',\''+t.id+'\',\''+esc(t.name)+'\')">🗑️</button>' +
+          '</div></div>';
+      }).join('');
+  var deskRows = S.tools.length===0
+    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No tools yet.</td></tr>'
+    : S.tools.map(function(t){
+        return '<tr><td style="font-weight:500;">'+esc(t.name)+'</td><td>'+catBadge(t.category)+'</td><td>'+lnkBtn(t.link)+'</td><td style="font-size:12px;color:var(--text2);max-width:160px;">'+esc(t.notes||'—')+'</td>' +
+          '<td style="white-space:nowrap;"><button class="btn-icon" onclick="editTool(\''+t.id+'\')">✏️</button><button class="btn-icon" onclick="confirmDel(\'tool\',\''+t.id+'\',\''+esc(t.name)+'\')" style="color:var(--error);">🗑️</button></td></tr>';
+      }).join('');
+
+  return '<div class="pg-hdr">' +
+      '<div><h1>🔧 Tool Management</h1><p>Manage tools available for team assignments.</p></div>' +
+      '<button class="btn-p pg-btn" onclick="addTool()">＋ Add Tool</button>' +
+    '</div>' +
+    '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
+      '<div class="mob-only">'+mobCards+'</div>' +
+      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Tool</th><th>Category</th><th>Link</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+    '</div>';
+}
+function toolForm(t){
+  t=t||{};
+  var co=CATS.map(function(c){return '<option'+(c===(t.category||'Other')?' selected':'')+'>'+c+'</option>';}).join('');
+  return '<div style="display:grid;gap:12px;">' +
+    '<div><label class="lbl">Name *</label><input class="inp" id="tf-n" value="'+esc(t.name||'')+'"></div>' +
+    '<div><label class="lbl">Category</label><select class="inp" id="tf-c">'+co+'</select></div>' +
+    '<div><label class="lbl">Link</label><input class="inp" id="tf-l" placeholder="https://" value="'+esc(t.link||'')+'"></div>' +
+    '<div><label class="lbl">Notes</label><input class="inp" id="tf-note" value="'+esc(t.notes||'')+'"></div>' +
+  '</div>';
+}
+function addTool(){
+  showModal('Add Tool',toolForm(),function(){
+    var n=fv('tf-n'); if(!n){toast('Name required','err');return;}
+    S.tools.push({id:uid(),name:n,category:fv('tf-c'),link:fv('tf-l'),notes:fv('tf-note')});
+    persist();toast('✅ Tool added');closeModal();go('tools');
+  },'Add Tool');
+}
+function editTool(id){
+  var t=S.tools.find(function(x){return String(x.id)===String(id);}); if(!t)return;
+  showModal('Edit Tool',toolForm(t),function(){
+    var n=fv('tf-n'); if(!n){toast('Name required','err');return;}
+    var idx=S.tools.findIndex(function(x){return String(x.id)===String(id);});
+    if(idx>=0)S.tools[idx]={id:t.id,name:n,category:fv('tf-c'),link:fv('tf-l'),notes:fv('tf-note')};
+    persist();toast('✅ Updated');closeModal();go('tools');
+  },'Save Changes');
+}
+
+/* ═══════════════════════════════════════
+   MATERIALS
+═══════════════════════════════════════ */
+function pgMats(){
+  var f=S.matFilter;
+  var filtered=f?S.materials.filter(function(m){return m.assignedRole===f;}):S.materials;
+  var fb='<div style="display:flex;gap:6px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--border);">' +
+    '<button onclick="setMF(\'\')" class="'+(f?'btn-s':'btn-p')+'" style="padding:5px 12px;min-height:36px;font-size:13px;">All</button>' +
+    S.roles.map(function(r){return '<button onclick="setMF(\''+esc(r.name)+'\')" class="'+(f===r.name?'btn-p':'btn-s')+'" style="padding:5px 12px;min-height:36px;font-size:13px;">'+esc(r.name)+'</button>';}).join('') +
+  '</div>';
+  var mobCards = filtered.length===0
+    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No materials found.</div>'
+    : filtered.map(function(m){
+        return '<div class="mob-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
+            '<p style="font-weight:600;margin:0;">'+esc(m.title)+'</p>' +
+            '<span class="badge b-purple" style="flex-shrink:0;font-size:11px;">'+esc(m.assignedRole||'—')+'</span>' +
+          '</div>' +
+          (m.link?'<a href="'+esc(m.link)+'" target="_blank" style="font-size:12px;color:var(--primary);display:block;margin-bottom:8px;">Open ↗</a>':'') +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn-s btn-sm" onclick="editMat(\''+m.id+'\')">✏️ Edit</button>' +
+            '<button class="btn-s btn-sm" style="color:var(--error);border-color:var(--error);" onclick="confirmDel(\'material\',\''+m.id+'\',\''+esc(m.title)+'\')">🗑️</button>' +
+          '</div></div>';
+      }).join('');
+  var deskRows = filtered.length===0
+    ? '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted);">No materials found.</td></tr>'
+    : filtered.map(function(m){
+        return '<tr><td style="font-weight:500;">'+esc(m.title)+'</td><td><span class="badge b-purple">'+esc(m.assignedRole||'—')+'</span></td><td>'+lnkBtn(m.link,'Open ↗')+'</td>' +
+          '<td style="white-space:nowrap;"><button class="btn-icon" onclick="editMat(\''+m.id+'\')">✏️</button><button class="btn-icon" onclick="confirmDel(\'material\',\''+m.id+'\',\''+esc(m.title)+'\')" style="color:var(--error);">🗑️</button></td></tr>';
+      }).join('');
+
+  return '<div class="pg-hdr">' +
+      '<div><h1>📚 Training Materials</h1><p>Manage SOPs, guides, and documentation.</p></div>' +
+      '<button class="btn-p pg-btn" onclick="addMat()">＋ Add Material</button>' +
+    '</div>' +
+    '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
+      fb +
+      '<div class="mob-only">'+mobCards+'</div>' +
+      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Title</th><th>Role</th><th>Link</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+    '</div>';
+}
+function setMF(r){S.matFilter=r;go('materials');}
+function matForm(m){
+  m=m||{};
+  var ro='<option value="">— None —</option>'+S.roles.map(function(r){return '<option value="'+esc(r.name)+'"'+(r.name===(m.assignedRole||'')?' selected':'')+'>'+esc(r.name)+'</option>';}).join('');
+  return '<div style="display:grid;gap:12px;">' +
+    '<div><label class="lbl">Title *</label><input class="inp" id="mf-t" value="'+esc(m.title||'')+'"></div>' +
+    '<div><label class="lbl">Link</label><input class="inp" id="mf-l" placeholder="https://" value="'+esc(m.link||'')+'"></div>' +
+    '<div><label class="lbl">Assigned Role</label><select class="inp" id="mf-r">'+ro+'</select></div>' +
+  '</div>';
+}
+function addMat(){
+  showModal('Add Material',matForm(),function(){
+    var t=fv('mf-t'); if(!t){toast('Title required','err');return;}
+    S.materials.push({id:uid(),title:t,link:fv('mf-l'),assignedRole:fv('mf-r')});
+    persist();toast('✅ Material added');closeModal();go('materials');
+  },'Add Material');
+}
+function editMat(id){
+  var m=S.materials.find(function(x){return String(x.id)===String(id);}); if(!m)return;
+  showModal('Edit Material',matForm(m),function(){
+    var t=fv('mf-t'); if(!t){toast('Title required','err');return;}
+    var idx=S.materials.findIndex(function(x){return String(x.id)===String(id);});
+    if(idx>=0)S.materials[idx]={id:m.id,title:t,link:fv('mf-l'),assignedRole:fv('mf-r')};
+    persist();toast('✅ Updated');closeModal();go('materials');
+  },'Save Changes');
+}
+
+/* ═══════════════════════════════════════
+   ROLES
+═══════════════════════════════════════ */
+function pgRoles(){
+  var cards = S.roles.length===0
+    ? '<p style="text-align:center;padding:48px;color:var(--muted);">No roles yet.</p>'
+    : S.roles.map(function(r){
+        return '<div class="glass" style="border-radius:16px;padding:20px;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+            '<h3 style="font-weight:600;font-size:15px;margin:0;">'+esc(r.name)+'</h3>' +
+            '<div><button class="btn-icon" onclick="editRole(\''+esc(r.name)+'\')">✏️</button><button class="btn-icon" onclick="confirmDel(\'role\',\''+esc(r.name)+'\',\''+esc(r.name)+'\')" style="color:var(--error);">🗑️</button></div>' +
+          '</div>' +
+          '<p style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin:0 0 6px;">Tools ('+r.defaultTools.length+')</p>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">'+r.defaultTools.map(function(t){return '<span class="badge b-sky">'+esc(t)+'</span>';}).join('')+'</div>' +
+          '<p style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin:0 0 6px;">Materials ('+r.defaultMaterials.length+')</p>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+r.defaultMaterials.map(function(m){return '<span class="badge b-purple">'+esc(m)+'</span>';}).join('')+'</div>' +
+        '</div>';
+      }).join('');
+  return '<div class="pg-hdr">' +
+      '<div><h1>🛡️ Role Profiles</h1><p>Define default tool & material assignments per role.</p></div>' +
+      '<button class="btn-p pg-btn" onclick="addRole()">＋ New Role</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">'+cards+'</div>';
+}
+function roleForm(r){
+  r=r||{name:'',defaultTools:[],defaultMaterials:[]};
+  var tb=S.tools.map(function(t){var on=r.defaultTools.indexOf(t.name)>=0;return '<button type="button" class="tog-btn'+(on?' on':'')+'" data-sel="'+on+'" data-n="'+esc(t.name)+'" onclick="togB(this,\'on\')">'+esc(t.name)+'</button>';}).join(' ');
+  var mb=S.materials.map(function(m){var on=r.defaultMaterials.indexOf(m.title)>=0;return '<button type="button" class="tog-btn'+(on?' on-v':'')+'" data-sel="'+on+'" data-n="'+esc(m.title)+'" onclick="togB(this,\'on-v\')">'+esc(m.title)+'</button>';}).join(' ');
+  return '<div style="display:grid;gap:14px;">' +
+    '<div><label class="lbl">Role Name *</label><input class="inp" id="rf-n" value="'+esc(r.name)+'"'+(r.name?' disabled style="opacity:.6;"':'')+' ></div>' +
+    '<div><label class="lbl">Default Tools <span style="color:var(--muted);font-weight:400;">(click to toggle)</span></label><div id="rf-t" style="display:flex;flex-wrap:wrap;gap:6px;background:rgba(255,255,255,.5);padding:12px;border-radius:10px;min-height:44px;">'+tb+'</div></div>' +
+    '<div><label class="lbl">Default Materials</label><div id="rf-m" style="display:flex;flex-wrap:wrap;gap:6px;background:rgba(255,255,255,.5);padding:12px;border-radius:10px;min-height:44px;">'+mb+'</div></div>' +
+  '</div>';
+}
+function togB(btn,cls){var on=btn.dataset.sel==='true';btn.dataset.sel=String(!on);btn.classList.toggle(cls,!on);}
+function getRFD(){
+  var t=[],m=[];
+  document.querySelectorAll('#rf-t .tog-btn').forEach(function(b){if(b.dataset.sel==='true')t.push(b.dataset.n);});
+  document.querySelectorAll('#rf-m .tog-btn').forEach(function(b){if(b.dataset.sel==='true')m.push(b.dataset.n);});
+  return{name:fv('rf-n'),tools:t,mats:m};
+}
+function addRole(){
+  showModal('New Role',roleForm(),function(){
+    var d=getRFD();if(!d.name){toast('Role name required','err');return;}
+    if(S.roles.find(function(r){return r.name===d.name;})){toast('Role exists','err');return;}
+    S.roles.push({name:d.name,defaultTools:d.tools,defaultMaterials:d.mats});
+    persist();toast('✅ Role created');closeModal();go('roles');
+  },'Create Role');
+}
+function editRole(name){
+  var r=S.roles.find(function(x){return x.name===name;}); if(!r)return;
+  showModal('Edit Role: '+name,roleForm(r),function(){
+    var d=getRFD();
+    var idx=S.roles.findIndex(function(x){return x.name===name;});
+    if(idx>=0)S.roles[idx]={name:name,defaultTools:d.tools,defaultMaterials:d.mats};
+    persist();toast('✅ Updated');closeModal();go('roles');
+  },'Save Changes');
+}
+
+/* ═══════════════════════════════════════
+   OFFBOARDING
+═══════════════════════════════════════ */
+function pgOff(){
+  var mo='<option value="">Choose a team member...</option>'+
+    S.team.map(function(m){return '<option value="'+m.id+'"'+(String(m.id)===String(S.offId)?' selected':'')+'>'+esc(m.name)+' — '+esc(m.role)+'</option>';}).join('');
+  var detail='';
+  if(S.offId){
+    var items=S.offboarding.filter(function(x){return String(x.memberId)===String(S.offId);});
+    var mem=S.team.find(function(m){return String(m.id)===String(S.offId);});
+    var done=items.filter(function(i){return i.status==='Done';}).length;
+    var prog=items.length?Math.round((done/items.length)*100):0;
+    var chks=items.map(function(it){
+      var d=it.status==='Done';
+      return '<div class="chk-item'+(d?' done':'')+'" onclick="togChk(\''+it.id+'\',\''+it.status+'\')">' +
+        '<input type="checkbox"'+(d?' checked':'')+' onclick="event.stopPropagation();togChk(\''+it.id+'\',\''+it.status+'\')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary);">' +
+        '<span style="flex:1;font-size:14px;font-weight:500;'+(d?'text-decoration:line-through;color:var(--muted);':'')+'">'+esc(it.checklistItem)+'</span>' +
+        (d&&it.dateCompleted?'<span style="font-size:11px;color:var(--muted);">'+esc(it.dateCompleted)+'</span>':'') +
+        (d?'<span style="color:var(--primary);">✓</span>':'') +
+      '</div>';
+    }).join('');
+    detail='<div class="glass" style="border-radius:16px;padding:24px;margin-top:16px;">' +
+      (mem?'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px;">' +
+        '<div><p style="font-weight:600;font-size:16px;margin:0 0 3px;">'+esc(mem.name)+'</p><p style="color:var(--text2);font-size:13px;margin:0;">'+esc(mem.role)+' · '+esc(mem.email)+'</p></div>' +
+        '<span class="badge '+(prog===100?'b-green':'b-purple')+'">'+(prog===100?'✅ Complete':'In Progress')+'</span>' +
+      '</div>':'') +
+      '<div style="margin-bottom:18px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:var(--text2);">Deactivation Progress</span><span style="font-weight:600;">'+done+'/'+items.length+' tools</span></div>' +
+        '<div class="prog-bar"><div class="prog-fill" style="width:'+prog+'%;"></div></div>' +
+      '</div>' +
+      (items.length===0?'<p style="text-align:center;padding:24px;color:var(--muted);">No tools assigned to this member.</p>' :
+        '<p style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin:0 0 10px;">Tools to Deactivate</p>'+chks) +
+      (prog===100&&items.length>0?'<div style="text-align:center;padding:16px;background:rgba(158,45,192,.08);border-radius:12px;margin-top:12px;"><div style="font-size:28px;">✅</div><p style="font-weight:600;color:var(--primary);margin:4px 0 0;">All tools deactivated! 🎉</p></div>':'') +
+    '</div>';
+  }
+  return '<div class="pg-hdr"><div><h1>🚪 Offboarding Checklist</h1><p>Track tool deactivation when a team member leaves.</p></div></div>' +
+    '<div style="max-width:580px;">' +
+      '<div class="glass" style="border-radius:16px;padding:20px;">' +
+        '<label class="lbl">Select Team Member to Offboard</label>' +
+        '<select class="inp" onchange="loadOff(this.value)">'+mo+'</select>' +
+      '</div>'+detail+
+    '</div>';
+}
+function loadOff(id){
+  S.offId=id; if(!id){go('offboarding');return;}
+  var mem=S.team.find(function(m){return String(m.id)===String(id);});
+  if(!mem){go('offboarding');return;}
+  var tools=toArr(mem.tools);
+  var existing=S.offboarding.filter(function(x){return String(x.memberId)===String(id);}).map(function(x){return x.checklistItem;});
+  tools.forEach(function(t){
+    if(t&&existing.indexOf(t)<0)
+      S.offboarding.push({id:uid(),memberId:id,memberName:mem.name,checklistItem:t,status:'Pending',dateCompleted:''});
+  });
+  persist(); go('offboarding');
+}
+function togChk(id,cur){
+  var ns=cur==='Done'?'Pending':'Done';
+  var idx=S.offboarding.findIndex(function(x){return String(x.id)===String(id);});
+  if(idx>=0){
+    S.offboarding[idx].status=ns;
+    S.offboarding[idx].dateCompleted=ns==='Done'?new Date().toLocaleDateString():'';
+    persist(); if(ns==='Done')toast('✅ Tool deactivated'); go('offboarding');
+  }
+}
+
+/* ═══════════════════════════════════════
+   WIZARD
+═══════════════════════════════════════ */
+var RICO={Manager:'💼',Designer:'🎨',Developer:'💻',Operations:'⚙️',Marketing:'📣',HR:'👤'};
+function openWizard(){S.wiz={step:1,role:'',name:'',email:'',tools:[],materials:[]};renderWiz();document.getElementById('wiz-bg').style.display='flex';}
+function closeWizard(){document.getElementById('wiz-bg').style.display='none';}
+function renderWiz(){
+  var w=S.wiz,prog=(w.step/3)*100;
+  var steps=['Role','Setup','Done'].map(function(s,i){
+    var n=i+1,on=w.step>=n;
+    return '<div style="display:flex;align-items:center;gap:5px;">' +
+      '<div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:'+(on?'var(--primary)':'#e8d5ec')+';color:'+(on?'#fff':'var(--muted)')+';">'+n+'</div>' +
+      '<span style="font-size:12px;color:var(--muted);">'+s+'</span>' +
+      (n<3?'<div style="width:18px;height:1px;background:#e8d5ec;margin:0 3px;"></div>':'') +
+    '</div>';
+  }).join('');
+  var body=w.step===1?wizS1():w.step===2?wizS2():wizS3();
+  var foot=w.step<3?'<div style="display:flex;gap:12px;padding:0 24px 24px;">' +
+    '<button class="btn-s" style="flex:1;" onclick="'+(w.step===1?'closeWizard()':'wizBack()')+'>'+(w.step===1?'Cancel':'← Back')+'</button>' +
+    '<button id="wiz-next" class="btn-p" style="flex:1;" onclick="wizNext()">'+(w.step===2?'Add Member →':'Continue →')+'</button>' +
+  '</div>':'';
+  document.getElementById('wiz-body').innerHTML=
+    '<div style="height:4px;background:#e8d5ec;"><div style="height:4px;background:var(--primary);width:'+prog+'%;transition:width .3s;"></div></div>' +
+    '<div style="display:flex;align-items:center;gap:6px;padding:14px 24px 6px;">'+steps+'</div>' +
+    '<div style="padding:8px 24px 16px;">'+body+'</div>' + foot;
+}
+function wizS1(){
+  var ar=S.roles.length>0?S.roles.map(function(r){return r.name;}):['Manager','Designer','Developer','Operations','Marketing','HR'];
+  return '<div style="text-align:center;margin-bottom:16px;">' +
+    '<h2 style="font-size:1.2rem;font-weight:700;margin:0 0 6px;">Welcome to HikeHER 👋</h2>' +
+    '<p style="color:var(--text2);font-size:14px;margin:0;">Select the role for this team member.</p>' +
+  '</div>' +
+  '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+    ar.map(function(nm){return '<div class="role-card'+(S.wiz.role===nm?' sel':'')+'" onclick="selRole(\''+esc(nm)+'\')">' +
+      '<div style="font-size:26px;margin-bottom:5px;">'+(RICO[nm]||'🔹')+'</div>' +
+      '<div style="font-size:13px;font-weight:600;">'+esc(nm)+'</div></div>';}).join('') +
+  '</div>';
+}
+function selRole(role){
+  S.wiz.role=role;
+  var def=S.roles.find(function(r){return r.name===role;});
+  S.wiz.tools=def?def.defaultTools.slice():[];
+  S.wiz.materials=def?def.defaultMaterials.slice():[];
+  renderWiz();
+}
+function wizS2(){
+  var tt=S.wiz.tools.map(function(t){return '<span class="tag">'+esc(t)+' <button class="tag-x" onclick="rmWT(\''+esc(t)+'\')">×</button></span>';}).join('');
+  var mt=S.wiz.materials.map(function(m){return '<span class="tag" style="background:var(--soft-accent);color:var(--primary-h);">'+esc(m)+' <button class="tag-x" onclick="rmWM(\''+esc(m)+'\')">×</button></span>';}).join('');
+  return '<div style="text-align:center;margin-bottom:16px;">' +
+    '<h2 style="font-size:1.2rem;font-weight:700;margin:0 0 6px;">Workspace Setup</h2>' +
+    '<p style="color:var(--text2);font-size:14px;margin:0;">Enter member details and review assignments.</p>' +
+  '</div>' +
+  '<div style="display:grid;gap:12px;">' +
+    '<div><label class="lbl">Full Name *</label><input class="inp" id="wn" placeholder="Jane Doe" value="'+esc(S.wiz.name)+'" oninput="S.wiz.name=this.value"></div>' +
+    '<div><label class="lbl">Email *</label><input class="inp" id="we" type="email" placeholder="jane@hikeher.com" value="'+esc(S.wiz.email)+'" oninput="S.wiz.email=this.value"></div>' +
+    '<div><label class="lbl">Assigned Tools</label><div style="background:rgba(255,255,255,.5);padding:10px;border-radius:10px;min-height:44px;display:flex;flex-wrap:wrap;gap:5px;">'+(tt||'<span style="color:var(--muted);font-size:13px;">No tools</span>')+'</div></div>' +
+    '<div><label class="lbl">Training Materials</label><div style="background:rgba(255,255,255,.5);padding:10px;border-radius:10px;min-height:44px;display:flex;flex-wrap:wrap;gap:5px;">'+(mt||'<span style="color:var(--muted);font-size:13px;">No materials</span>')+'</div></div>' +
+  '</div>';
+}
+function savWiz(){if(document.getElementById('wn'))S.wiz.name=document.getElementById('wn').value;if(document.getElementById('we'))S.wiz.email=document.getElementById('we').value;}
+function rmWT(t){savWiz();S.wiz.tools=S.wiz.tools.filter(function(x){return x!==t;});renderWiz();}
+function rmWM(m){savWiz();S.wiz.materials=S.wiz.materials.filter(function(x){return x!==m;});renderWiz();}
+function wizS3(){
+  return '<div style="text-align:center;padding:16px 0;">' +
+    '<div style="width:72px;height:72px;border-radius:50%;background:rgba(158,45,192,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:38px;">✅</div>' +
+    '<h2 style="font-size:1.2rem;font-weight:700;margin:0 0 8px;">You\'re all set! 🎉</h2>' +
+    '<p style="color:var(--text2);font-size:14px;margin:0 0 22px;"><strong>'+esc(S.wiz.name)+'</strong> added as <strong>'+esc(S.wiz.role)+'</strong>.</p>' +
+    '<div style="display:flex;flex-direction:column;gap:10px;max-width:240px;margin:0 auto;">' +
+      '<button class="btn-p" style="width:100%;justify-content:center;" onclick="emailFromWiz()">📧 Generate Onboarding Email</button>' +
+      '<button class="btn-s" style="width:100%;justify-content:center;" onclick="closeWizard();go(\'dashboard\');">📊 Go to Dashboard</button>' +
+    '</div></div>';
+}
+function emailFromWiz(){var last=S.team.length>0?S.team[S.team.length-1]:null;closeWizard();if(last)openEmailModal(String(last.id));}
+function wizNext(){
+  var w=S.wiz;
+  if(w.step===1){if(!w.role){toast('Please select a role','err');return;}w.step=2;renderWiz();}
+  else if(w.step===2){
+    savWiz();
+    if(!w.name.trim()){toast('Name is required','err');return;}
+    if(!w.email.trim()){toast('Email is required','err');return;}
+    var btn=document.getElementById('wiz-next');if(btn){btn.disabled=true;btn.textContent='Adding...';}
+    S.team.push({id:uid(),name:w.name,email:w.email,role:w.role,tools:w.tools,materials:w.materials,status:'Active'});
+    persist();
+    setTimeout(function(){w.step=3;renderWiz();},300);
+  }
+}
+function wizBack(){S.wiz.step--;renderWiz();}
+
+/* ═══════════════════════════════════════
+   EMAIL GENERATOR
+═══════════════════════════════════════ */
+function openEmailModal(id){
+  S.emailId=String(id);
+  var mo=S.team.map(function(m){return '<option value="'+m.id+'"'+(String(m.id)===S.emailId?' selected':'')+'>'+esc(m.name)+' — '+esc(m.role)+'</option>';}).join('');
+  showModal('📧 Generate Onboarding Email',
+    '<div style="display:grid;gap:14px;">' +
+      '<div><label class="lbl">Team Member</label><select class="inp" id="em-sel" onchange="refreshEmail()">'+mo+'</select></div>' +
+      '<div id="em-area" style="min-height:140px;display:flex;align-items:center;justify-content:center;"><div class="spinner"></div></div>' +
+    '</div>',
+    function(){
+      var ta=document.getElementById('em-txt'); if(!ta){toast('No email to copy','err');return;}
+      try{navigator.clipboard.writeText(ta.value).then(function(){toast('✅ Email copied to clipboard!');});}
+      catch(ex){ta.select();document.execCommand('copy');toast('✅ Copied!');}
+    },'📋 Copy Email');
+  setTimeout(refreshEmail,100);
+}
+function refreshEmail(){
+  var sel=document.getElementById('em-sel'); if(!sel)return;
+  S.emailId=sel.value;
+  var area=document.getElementById('em-area'); if(!area)return;
+  var mem=S.team.find(function(m){return String(m.id)===S.emailId;});
+  if(!mem){area.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:24px;">Select a member to preview.</p>';return;}
+  var tools=toArr(mem.tools), mats=toArr(mem.materials);
+  var tLinks={}; S.tools.forEach(function(t){tLinks[t.name]=t.link;});
+  var tl=tools.map(function(t){return '  • '+t+(tLinks[t]?' — '+tLinks[t]:'');}).join('\n');
+  var ml=mats.map(function(m){return '  • '+m;}).join('\n');
+  var txt='Hello '+mem.name+',\n\nWelcome to the HikeHER team as our '+mem.role+'! 🎉\n\nWe\'re thrilled to have you on board. Here\'s everything you need to get started:\n\n🛠 Your Tools:\n'+(tl||'  (No tools assigned)')+'\n\n📚 Training Materials:\n'+(ml||'  (No materials assigned)')+'\n\nPlease take some time to familiarise yourself with the above resources. If you have any questions, don\'t hesitate to reach out.\n\nLooking forward to working with you!\n\nBest regards,\nThe HikeHER Operations Team\nhello@hikeher.com';
+  area.innerHTML='<textarea id="em-txt" readonly class="inp" style="height:220px;font-family:monospace;font-size:12px;line-height:1.6;resize:none;">'+esc(txt)+'</textarea>';
+}
+
+/* ═══════════════════════════════════════
+   DELETE CONFIRM
+═══════════════════════════════════════ */
+function confirmDel(type,id,name){
+  showModal('⚠️ Confirm Delete',
+    '<p style="margin:0 0 6px;">Delete <strong>'+esc(name)+'</strong>?</p>' +
+    '<p style="color:var(--muted);font-size:13px;margin:0;">This action cannot be undone.</p>',
+    function(){
+      if(type==='team')     S.team     =S.team.filter(function(x){return String(x.id)!==String(id);});
+      if(type==='tool')     S.tools    =S.tools.filter(function(x){return String(x.id)!==String(id);});
+      if(type==='material') S.materials=S.materials.filter(function(x){return String(x.id)!==String(id);});
+      if(type==='role')     S.roles    =S.roles.filter(function(x){return x.name!==id;});
+      persist();toast('✅ Deleted');closeModal();go(S.page);
+    },'🗑️ Delete',true);
+}
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+var _cb=null;
+function showModal(title,body,onOk,okLabel,danger){
+  _cb=onOk;
+  document.getElementById('modal-body').innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+      '<h2 style="font-size:1.05rem;font-weight:700;margin:0;">'+title+'</h2>' +
+      '<button onclick="closeModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1;padding:0;">×</button>' +
+    '</div>' +
+    '<div style="margin-bottom:20px;">'+body+'</div>' +
+    '<div style="display:flex;gap:12px;">' +
+      '<button class="btn-s" style="flex:1;" onclick="closeModal()">Cancel</button>' +
+      '<button class="'+(danger?'btn-d':'btn-p')+'" style="flex:1;justify-content:center;" onclick="_cb&&_cb()">'+esc(okLabel||'Save')+'</button>' +
+    '</div>';
+  document.getElementById('modal-bg').style.display='flex';
+}
+function closeModal(){document.getElementById('modal-bg').style.display='none';_cb=null;}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+window.onload=function(){
+  hydrate();
+  go('dashboard');
+};
+</script>
+</body>
+</html>

@@ -270,7 +270,7 @@
 
     /* ── Toast ── */
     .toast-el {
-      position: fixed; z-index: 9999; display: none;
+      position: fixed; z-index: 9999;
       padding: 12px 20px; border-radius: var(--r);
       font-size: 14px; font-weight: 500;
       max-width: calc(100vw - 32px);
@@ -305,10 +305,13 @@
     .chk-item:hover { background: rgba(255,255,255,0.92); border-color: var(--primary-l); }
     .chk-item.done { opacity: .55; }
 
-    /* ── Page header ── */
-    .pg-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
-    .pg-hdr h1 { font-size: clamp(1.1rem, 5vw, 1.5rem); font-weight: 700; margin: 0 0 3px; line-height: 1.2; }
-    .pg-hdr p  { color: var(--text2); font-size: 13px; margin: 0; }
+    /* ── Page header (desktop) ── */
+    .ph-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+    }
+    .ph-head h1 { font-size: clamp(1.1rem, 5vw, 1.5rem); font-weight: 700; margin: 0 0 3px; line-height: 1.2; }
+    .ph-head p  { color: var(--text2); font-size: 13px; margin: 0; }
 
     /* ── Mobile cards ── */
     .mob-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
@@ -335,35 +338,67 @@
       margin: 0 auto 14px; color: var(--primary);
     }
 
-    /* ═══ MOBILE ═══ */
+    /* ═══════════════════════════════════════
+       MOBILE — STICKY PAGE HEADER FIX
+       Title + Add button stay pinned at top.
+       Table / card list scrolls below.
+    ═══════════════════════════════════════ */
     @media (max-width: 767px) {
+      /* Constrain the full app to viewport height */
+      #app { height: 100dvh; overflow: hidden; }
+
+      /* Main area fills exactly the space between fixed header & nav */
+      #main {
+        position: fixed !important;
+        top: calc(var(--mob-hdr) + env(safe-area-inset-top)) !important;
+        bottom: calc(var(--mob-nav) + env(safe-area-inset-bottom)) !important;
+        left: 0 !important; right: 0 !important;
+        margin-left: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column;
+      }
+
+      /* Content area fills main as a flex column */
+      #content {
+        flex: 1 !important; min-height: 0 !important;
+        overflow: hidden !important;
+        display: flex !important; flex-direction: column;
+        padding: 0 !important; max-width: none !important; margin: 0 !important;
+      }
+
+      /* Each page fills the column */
+      .ph-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+      /* Sticky title + add-button row */
+      .ph-head {
+        flex-shrink: 0 !important;
+        padding: 10px 14px !important;
+        margin-bottom: 0 !important;
+        background: rgba(237, 225, 238, 0.97);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+      }
+      .ph-head h1 { font-size: 1rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ph-head p  { display: none !important; }
+      .ph-head .pg-btn { padding: 8px 12px !important; min-height: 38px !important; font-size: 12px !important; white-space: nowrap; }
+
+      /* Scrollable content body */
+      .ph-body {
+        flex: 1; overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0; padding: 12px 14px;
+      }
+
+      /* Existing mobile helpers */
       #sidebar { transform: translateX(-100%); width: min(280px, 80vw); }
       #mob-hdr { display: flex !important; }
       #mob-nav { display: flex !important; }
-      #main {
-        margin-left: 0;
-        padding-top: calc(var(--mob-hdr) + env(safe-area-inset-top));
-        padding-bottom: calc(var(--mob-nav) + env(safe-area-inset-bottom));
-      }
-      #content { padding: 12px 14px; }
       .desk-only { display: none !important; }
-      .pg-hdr { flex-direction: column; }
-      .pg-hdr .pg-btn { width: 100%; }
-      .modal-bg { align-items: flex-end; padding: 0; }
-      .modal-box {
-        border-radius: 24px 24px 0 0; max-width: 100%;
-        max-height: 92dvh; padding: 20px 20px;
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-        animation: sheetUp .28s cubic-bezier(.4,0,.2,1);
-      }
-      @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-      #wiz-bg .modal-box {
-        border-radius: 24px 24px 0 0 !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-        max-height: 95dvh;
-      }
+      .ph-head { flex-direction: row; }
       .stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
       .stat-card { padding: 14px; gap: 10px; }
       .stat-ico { width: 38px; height: 38px; border-radius: 10px; }
@@ -379,13 +414,27 @@
       #content > div[style*="max-width:580px"] { max-width: 100% !important; }
       .inp { font-size: 16px; }
       .mob-card .mob-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+      .modal-bg { align-items: flex-end; padding: 0; }
+      .modal-box {
+        border-radius: 24px 24px 0 0; max-width: 100%;
+        max-height: 92dvh; padding: 20px 20px;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+        animation: sheetUp .28s cubic-bezier(.4,0,.2,1);
+      }
+      @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      #wiz-bg .modal-box {
+        border-radius: 24px 24px 0 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        max-height: 95dvh;
+      }
     }
 
     @media (max-width: 374px) {
-      #content { padding: 10px; }
       .stat-grid { grid-template-columns: 1fr !important; }
       .badge { font-size: 11px; padding: 2px 8px; }
-      .pg-hdr h1 { font-size: 1.05rem; }
+      .ph-head h1 { font-size: 0.95rem !important; }
       .mnav-item { font-size: 8px; }
     }
 
@@ -585,6 +634,11 @@ function lnkBtn(url,label) {
              : '<span style="color:#ccc;">—</span>';
 }
 
+/* ── Page layout helper: sticky header + scrollable body ── */
+function ph(hdr, body) {
+  return '<div class="ph-wrap"><div class="ph-head">' + hdr + '</div><div class="ph-body">' + body + '</div></div>';
+}
+
 /* ═══════════════════════════════════════
    TOAST
 ═══════════════════════════════════════ */
@@ -616,7 +670,9 @@ function go(page) {
   else if (page === 'materials')   c.innerHTML = pgMats();
   else if (page === 'roles')       c.innerHTML = pgRoles();
   else if (page === 'offboarding') c.innerHTML = pgOff();
-  window.scrollTo(0, 0);
+  /* Scroll the scrollable body back to top on page change */
+  var pb = c.querySelector('.ph-body');
+  if (pb) { pb.scrollTop = 0; } else { window.scrollTo(0, 0); }
 }
 
 function toggleSb() {
@@ -657,10 +713,10 @@ function pgDash() {
         return '<tr><td style="font-weight:500;">'+esc(m.name)+'</td><td style="color:var(--text2);font-size:13px;">'+esc(m.email)+'</td><td><span class="badge b-purple">'+esc(m.role)+'</span></td><td style="color:var(--text2);font-size:12px;">'+esc(prev(m.tools))+'</td><td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td></tr>';
       }).join('');
 
-  return '<div class="pg-hdr">' +
-      '<div><h1>Dashboard</h1><p>Welcome back — here\'s your team overview.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Team Member</button>' +
-    '</div>' +
+  var hdr = '<div><h1>Dashboard</h1><p>Welcome back — here\'s your team overview.</p></div>' +
+    '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Team Member</button>';
+
+  var body =
     '<div class="stat-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">' +
       statCard('team','Active Members',active,'var(--primary)') +
       statCard('tools','Tools',S.tools.length,'var(--info)') +
@@ -674,6 +730,8 @@ function pgDash() {
       '<div class="mob-only">'+mobRows+'</div>' +
       '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Status</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
     '</div>';
+
+  return ph(hdr, body);
 }
 
 function statCard(iconName, label, val, bg) {
@@ -732,22 +790,20 @@ function pgTeam() {
           '</td></tr>';
       }).join('');
 
-  return '<div class="pg-hdr">' +
-      '<div><h1>Team Members</h1><p>Manage your team, roles, and assignments.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Member</button>' +
+  var hdr = '<div><h1>Team Members</h1><p>Manage your team, roles, and assignments.</p></div>' +
+    '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Member</button>';
+
+  var body =
+    '<div style="position:relative;margin-bottom:14px;">' +
+      '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
+      '<input class="inp" placeholder="Search members..." style="padding-left:38px;" value="'+esc(S.teamSearch||'')+'" oninput="S.teamSearch=this.value;go(\'team\')">' +
     '</div>' +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search members..." style="padding-left:38px;" value="'+esc(S.teamSearch||'')+'" oninput="S.teamSearch=this.value;go(\'team\')" >' +
-          '</div>' +
-        '</div>' +
-        mobCards +
-      '</div>' +
+      '<div class="mob-only">' + mobCards + '</div>' +
       '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Materials</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
     '</div>';
+
+  return ph(hdr, body);
 }
 
 function editMember(id) {
@@ -819,22 +875,20 @@ function pgTools() {
           '</td></tr>';
       }).join('');
 
-  return '<div class="pg-hdr">' +
-      '<div><h1>Tool Management</h1><p>Manage tools available for team assignments.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="addTool()">'+ic('plus',15)+' Add Tool</button>' +
+  var hdr = '<div><h1>Tool Management</h1><p>Manage tools available for team assignments.</p></div>' +
+    '<button class="btn-p pg-btn" onclick="addTool()">'+ic('plus',15)+' Add Tool</button>';
+
+  var body =
+    '<div style="position:relative;margin-bottom:14px;">' +
+      '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
+      '<input class="inp" placeholder="Search tools..." style="padding-left:38px;" value="'+esc(S.toolSearch||'')+'" oninput="S.toolSearch=this.value;go(\'tools\')">' +
     '</div>' +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search tools..." style="padding-left:38px;" value="'+esc(S.toolSearch||'')+'" oninput="S.toolSearch=this.value;go(\'tools\')">' +
-          '</div>' +
-        '</div>' +
-        mobCards +
-      '</div>' +
+      '<div class="mob-only">' + mobCards + '</div>' +
       '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Tool</th><th>Category</th><th>Link</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
     '</div>';
+
+  return ph(hdr, body);
 }
 
 function toolForm(t) {
@@ -914,26 +968,21 @@ function pgMats() {
           '</td></tr>';
       }).join('');
 
-  return '<div class="pg-hdr">' +
-      '<div><h1>Training Materials</h1><p>Manage SOPs, guides, and documentation.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="addMat()">'+ic('plus',15)+' Add Material</button>' +
+  var hdr = '<div><h1>Training Materials</h1><p>Manage SOPs, guides, and documentation.</p></div>' +
+    '<button class="btn-p pg-btn" onclick="addMat()">'+ic('plus',15)+' Add Material</button>';
+
+  var body =
+    '<div style="position:relative;margin-bottom:10px;">' +
+      '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
+      '<input class="inp" placeholder="Search materials..." style="padding-left:38px;" value="'+esc(S.matSearch||'')+'" oninput="S.matSearch=this.value;go(\'materials\')">' +
     '</div>' +
-    '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search materials..." style="padding-left:38px;" value="'+esc(S.matSearch||'')+'" oninput="S.matSearch=this.value;go(\'materials\')">' +
-          '</div>' +
-        '</div>' +
-        fb +
-        mobCards +
-      '</div>' +
-      '<div class="desk-only" style="overflow-x:auto;">' +
-        fb +
-        '<table><thead><tr><th>Title</th><th>Role</th><th>Link</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table>' +
-      '</div>' +
+    fb +
+    '<div class="glass" style="border-radius:16px;overflow:hidden;margin-top:10px;">' +
+      '<div class="mob-only">' + mobCards + '</div>' +
+      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Title</th><th>Role</th><th>Link</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
     '</div>';
+
+  return ph(hdr, body);
 }
 function setMF(r) { S.matFilter=r; go('materials'); }
 function matForm(m) {
@@ -994,11 +1043,10 @@ function pgRoles() {
         '</div>';
       }).join('');
 
-  return '<div class="pg-hdr">' +
-      '<div><h1>Role Profiles</h1><p>Define default tool & material assignments per role.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="addRole()">'+ic('plus',15)+' New Role</button>' +
-    '</div>' +
-    '<div class="roles-grid">'+cards+'</div>';
+  var hdr = '<div><h1>Role Profiles</h1><p>Define default tool &amp; material assignments per role.</p></div>' +
+    '<button class="btn-p pg-btn" onclick="addRole()">'+ic('plus',15)+' New Role</button>';
+
+  return ph(hdr, '<div class="roles-grid">'+cards+'</div>');
 }
 
 function roleForm(r) {
@@ -1082,13 +1130,17 @@ function pgOff() {
         '</div>' : '') +
     '</div>';
   }
-  return '<div class="pg-hdr"><div><h1>Offboarding Checklist</h1><p>Track tool deactivation when a team member leaves.</p></div></div>' +
-    '<div style="max-width:min(580px,100%);">' +
-      '<div class="glass" style="border-radius:16px;padding:20px;">' +
-        '<label class="lbl">Select Team Member to Offboard</label>' +
-        '<select class="inp" onchange="loadOff(this.value)">'+mo+'</select>' +
-      '</div>'+detail+
-    '</div>';
+
+  var hdr = '<div><h1>Offboarding</h1><p>Track tool deactivation when a team member leaves.</p></div>';
+
+  var body = '<div style="max-width:min(580px,100%);">' +
+    '<div class="glass" style="border-radius:16px;padding:20px;">' +
+      '<label class="lbl">Select Team Member to Offboard</label>' +
+      '<select class="inp" onchange="loadOff(this.value)">'+mo+'</select>' +
+    '</div>'+detail+
+  '</div>';
+
+  return ph(hdr, body);
 }
 
 function loadOff(id) {
@@ -1153,7 +1205,7 @@ function renderWiz() {
       '<div style="display:flex;align-items:center;gap:6px;">'+steps+'</div>' +
       '<button onclick="closeWizard()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px 6px;min-width:36px;min-height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;" title="Close">'+ic('close',18)+'</button>' +
     '</div>' +
-    '<div id="wiz-err" style="display:none;margin:0 20px 8px;padding:10px 14px;background:#fff0f0;border:1px solid #f5c0c0;border-radius:8px;font-size:13px;color:var(--error);display:none;align-items:center;gap:6px;">'+ic('warning',14)+'<span id="wiz-err-txt"></span></div>' +
+    '<div id="wiz-err" style="display:none;margin:0 20px 8px;padding:10px 14px;background:#fff0f0;border:1px solid #f5c0c0;border-radius:8px;font-size:13px;color:var(--error);align-items:center;gap:6px;">'+ic('warning',14)+'<span id="wiz-err-txt"></span></div>' +
     '<div style="padding:4px 20px 12px;">'+body+'</div>' + foot;
 }
 

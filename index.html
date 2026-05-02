@@ -314,6 +314,19 @@
     .mob-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
     .mob-card:last-child { border-bottom: none; }
 
+    /* ── Scrollable table wrapper ── */
+    .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .tbl-scroll::-webkit-scrollbar { height: 4px; }
+    .tbl-scroll::-webkit-scrollbar-track { background: transparent; }
+    .tbl-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Table search bar ── */
+    .tbl-toolbar { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .tbl-toolbar .srch-wrap { position: relative; flex: 1; min-width: 160px; }
+    .tbl-toolbar .srch-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .tbl-toolbar .srch-inp { width: 100%; padding: 8px 12px 8px 34px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.88); font-size: 14px; outline: none; height: 40px; font-family: inherit; color: var(--text); transition: border-color 0.15s; -webkit-appearance: none; }
+    .tbl-toolbar .srch-inp:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(158,45,192,0.12); }
+
     /* ── Filter pill row ── */
     .filter-row {
       display: flex; gap: 6px; padding: 12px 14px;
@@ -346,8 +359,10 @@
         padding-bottom: calc(var(--mob-nav) + env(safe-area-inset-bottom));
       }
       #content { padding: 12px 14px; }
-      .desk-only { display: none !important; }
       .pg-hdr { flex-direction: column; }
+      .tbl-scroll table { min-width: 500px; }
+      .tbl-scroll td { padding: 10px 12px; font-size: 13px; }
+      .tbl-scroll th { padding: 9px 12px; }
       .pg-hdr .pg-btn { width: 100%; }
       .modal-bg { align-items: flex-end; padding: 0; }
       .modal-box {
@@ -635,44 +650,45 @@ function closeSb() {
 ═══════════════════════════════════════ */
 function pgDash() {
   var active = S.team.filter(function(m) { return m.status === 'Active'; }).length;
-  var mobRows = S.team.length === 0
-    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No team members yet.</div>'
-    : S.team.slice(0, 8).map(function(m) {
-        return '<div class="mob-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">' +
-            '<div><p style="font-weight:600;margin:0 0 2px;">'+esc(m.name)+'</p>' +
-            '<p style="font-size:12px;color:var(--text2);margin:0;">'+esc(m.email)+'</p></div>' +
-            '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
-              '<span class="badge b-purple">'+esc(m.role)+'</span>' +
-              '<span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span>' +
-            '</div>' +
-          '</div>' +
-          '<div style="margin-top:10px;display:flex;gap:6px;">' +
-            '<button class="btn-s btn-sm" onclick="openEmailModal(\''+m.id+'\')">'+ic('mail',13)+' Email</button>' +
-          '</div></div>';
-      }).join('');
-  var deskRows = S.team.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No team members yet — add your first!</td></tr>'
+  var inactive = S.team.length - active;
+  var tableRows = S.team.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--muted);">No team members yet — add your first!</td></tr>'
     : S.team.slice(0, 10).map(function(m) {
-        return '<tr><td style="font-weight:500;">'+esc(m.name)+'</td><td style="color:var(--text2);font-size:13px;">'+esc(m.email)+'</td><td><span class="badge b-purple">'+esc(m.role)+'</span></td><td style="color:var(--text2);font-size:12px;">'+esc(prev(m.tools))+'</td><td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td></tr>';
+        return '<tr>' +
+          '<td style="font-weight:500;white-space:nowrap;">'+esc(m.name)+'</td>' +
+          '<td style="color:var(--text2);font-size:13px;">'+esc(m.email)+'</td>' +
+          '<td><span class="badge b-purple">'+esc(m.role)+'</span></td>' +
+          '<td style="color:var(--text2);font-size:12px;white-space:nowrap;">'+esc(prev(m.tools))+'</td>' +
+          '<td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td>' +
+        '</tr>';
       }).join('');
+
+  var quickActs = '<div class="mob-only" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">' +
+    '<button class="btn-p" onclick="openWizard()" style="font-size:13px;">'+ic('user-plus',14)+' Add Member</button>' +
+    '<button class="btn-s" onclick="go(\'team\')" style="font-size:13px;">'+ic('team',14)+' Team</button>' +
+    '<button class="btn-s" onclick="go(\'tools\')" style="font-size:13px;">'+ic('tools',14)+' Tools</button>' +
+    '<button class="btn-s" onclick="go(\'offboarding\')" style="font-size:13px;">'+ic('offboarding',14)+' Offboard</button>' +
+  '</div>';
 
   return '<div class="pg-hdr">' +
       '<div><h1>Dashboard</h1><p>Welcome back — here\'s your team overview.</p></div>' +
-      '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Team Member</button>' +
+      '<button class="btn-p pg-btn desk-only" onclick="openWizard()">'+ic('user-plus',15)+' Add Team Member</button>' +
     '</div>' +
     '<div class="stat-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">' +
       statCard('team','Active Members',active,'var(--primary)') +
       statCard('tools','Tools',S.tools.length,'var(--info)') +
       statCard('materials','Materials',S.materials.length,'var(--cta)') +
     '</div>' +
+    quickActs +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
       '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">' +
-        '<span style="font-weight:600;">Recent Members</span>' +
-        '<button onclick="go(\'team\')" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px;">View all '+ic('arrow-right',13)+'</button>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-weight:600;">Recent Members</span>' +
+          (S.team.length>0?'<span style="font-size:11px;color:var(--muted);background:rgba(0,0,0,0.04);padding:2px 8px;border-radius:20px;">'+S.team.length+'</span>':'') +
+        '</div>' +
+        '<button onclick="go(\'team\')" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 0;min-height:36px;">View all '+ic('arrow-right',13)+'</button>' +
       '</div>' +
-      '<div class="mob-only">'+mobRows+'</div>' +
-      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Status</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+      '<div class="tbl-scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Status</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>' +
     '</div>';
 }
 
@@ -692,38 +708,15 @@ function pgTeam() {
            (m.role||'').toLowerCase().indexOf(q)>=0;
   }) : S.team;
 
-  var mobCards = filtered.length === 0
-    ? '<div style="padding:48px 24px;text-align:center;color:var(--muted);">'+(S.team.length===0?'No members yet — add your first!':'No members match your search.')+'</div>'
+  var rows = filtered.length === 0
+    ? '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--muted);">'+(S.team.length===0?'No members yet — add your first!':'No members match your search.')+'</td></tr>'
     : filtered.map(function(m) {
-        var tools = toArr(m.tools);
-        return '<div class="mob-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">' +
-            '<div style="min-width:0;">' +
-              '<p style="font-weight:600;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(m.name)+'</p>' +
-              '<p style="font-size:12px;color:var(--text2);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(m.email)+'</p>' +
-            '</div>' +
-            '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">' +
-              '<span class="badge b-purple">'+esc(m.role)+'</span>' +
-              '<span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span>' +
-            '</div>' +
-          '</div>' +
-          (tools.length ? '<p style="font-size:12px;color:var(--text2);margin:0 0 10px;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ic('tools',12)+' '+esc(prev(m.tools,3))+'</p>' : '') +
-          '<div style="display:grid;grid-template-columns:1fr 1fr 44px;gap:6px;">' +
-            '<button class="btn-s btn-sm" onclick="openEmailModal(\''+m.id+'\')">'+ic('mail',13)+' Email</button>' +
-            '<button class="btn-s btn-sm" onclick="editMember(\''+m.id+'\')">'+ic('edit',13)+' Edit</button>' +
-            '<button class="btn-icon" style="color:var(--error);border:1px solid var(--border);border-radius:8px;" onclick="confirmDel(\'team\',\''+m.id+'\',\''+esc(m.name)+'\')">'+ic('trash',15)+'</button>' +
-          '</div></div>';
-      }).join('');
-
-  var deskRows = S.team.length === 0
-    ? '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--muted);">No members yet.</td></tr>'
-    : S.team.map(function(m) {
         return '<tr>' +
-          '<td style="font-weight:500;">'+esc(m.name)+'</td>' +
-          '<td style="font-size:12px;color:var(--text2);">'+esc(m.email)+'</td>' +
+          '<td style="font-weight:500;white-space:nowrap;">'+esc(m.name)+'</td>' +
+          '<td style="font-size:13px;color:var(--text2);">'+esc(m.email)+'</td>' +
           '<td><span class="badge b-purple">'+esc(m.role)+'</span></td>' +
-          '<td style="font-size:12px;color:var(--text2);">'+esc(prev(m.tools))+'</td>' +
-          '<td style="font-size:12px;color:var(--text2);">'+esc(prev(m.materials))+'</td>' +
+          '<td style="font-size:12px;color:var(--text2);white-space:nowrap;">'+esc(prev(m.tools))+'</td>' +
+          '<td style="font-size:12px;color:var(--text2);white-space:nowrap;">'+esc(prev(m.materials))+'</td>' +
           '<td><span class="badge '+(m.status==='Active'?'b-green':'b-gray')+'">'+esc(m.status)+'</span></td>' +
           '<td style="white-space:nowrap;">' +
             '<button class="btn-icon" title="Email" onclick="openEmailModal(\''+m.id+'\')">'+ic('mail',16)+'</button>' +
@@ -737,16 +730,11 @@ function pgTeam() {
       '<button class="btn-p pg-btn" onclick="openWizard()">'+ic('user-plus',15)+' Add Member</button>' +
     '</div>' +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search members..." style="padding-left:38px;" value="'+esc(S.teamSearch||'')+'" oninput="S.teamSearch=this.value;go(\'team\')" >' +
-          '</div>' +
-        '</div>' +
-        mobCards +
+      '<div class="tbl-toolbar">' +
+        '<div class="srch-wrap"><div class="srch-ico">'+ic('search',15)+'</div><input class="srch-inp" placeholder="Search members..." value="'+esc(S.teamSearch||'')+'" oninput="S.teamSearch=this.value;go(\'team\')"></div>' +
+        '<span style="font-size:12px;color:var(--muted);white-space:nowrap;">'+filtered.length+' of '+S.team.length+'</span>' +
       '</div>' +
-      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Materials</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+      '<div class="tbl-scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tools</th><th>Materials</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '</div>';
 }
 
@@ -788,31 +776,14 @@ function pgTools() {
            (t.notes||'').toLowerCase().indexOf(q)>=0;
   }) : S.tools;
 
-  var mobCards = filtered.length === 0
-    ? '<div style="padding:40px 24px;text-align:center;color:var(--muted);">'+(S.tools.length===0?'No tools yet — add your first!':'No tools match your search.')+'</div>'
+  var rows = filtered.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--muted);">'+(S.tools.length===0?'No tools yet — add your first!':'No tools match your search.')+'</td></tr>'
     : filtered.map(function(t) {
-        return '<div class="mob-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
-            '<div style="min-width:0;">' +
-              '<p style="font-weight:600;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(t.name)+'</p>' +
-              (t.notes?'<p style="font-size:12px;color:var(--text2);margin:0 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(t.notes)+'</p>':'')+
-              (t.link?'<a href="'+esc(t.link)+'" target="_blank" style="font-size:12px;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:3px;">Visit '+ic('arrow-right',11)+'</a>':'')+'</div>' +
-            '<div style="flex-shrink:0;">'+catBadge(t.category)+'</div>' +
-          '</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 44px;gap:6px;">' +
-            '<button class="btn-s btn-sm" onclick="editTool(\''+t.id+'\')">'+ic('edit',13)+' Edit</button>' +
-            '<button class="btn-icon" style="color:var(--error);border:1px solid var(--border);border-radius:8px;" onclick="confirmDel(\'tool\',\''+t.id+'\',\''+esc(t.name)+'\')">'+ic('trash',15)+'</button>' +
-          '</div></div>';
-      }).join('');
-
-  var deskRows = S.tools.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No tools yet.</td></tr>'
-    : S.tools.map(function(t) {
         return '<tr>' +
-          '<td style="font-weight:500;">'+esc(t.name)+'</td>' +
+          '<td style="font-weight:500;white-space:nowrap;">'+esc(t.name)+'</td>' +
           '<td>'+catBadge(t.category)+'</td>' +
           '<td>'+lnkBtn(t.link)+'</td>' +
-          '<td style="font-size:12px;color:var(--text2);max-width:160px;">'+esc(t.notes||'—')+'</td>' +
+          '<td style="font-size:12px;color:var(--text2);">'+esc(t.notes||'—')+'</td>' +
           '<td style="white-space:nowrap;">' +
             '<button class="btn-icon" title="Edit" onclick="editTool(\''+t.id+'\')">'+ic('edit',16)+'</button>' +
             '<button class="btn-icon" title="Delete" onclick="confirmDel(\'tool\',\''+t.id+'\',\''+esc(t.name)+'\')" style="color:var(--error);">'+ic('trash',16)+'</button>' +
@@ -824,16 +795,11 @@ function pgTools() {
       '<button class="btn-p pg-btn" onclick="addTool()">'+ic('plus',15)+' Add Tool</button>' +
     '</div>' +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search tools..." style="padding-left:38px;" value="'+esc(S.toolSearch||'')+'" oninput="S.toolSearch=this.value;go(\'tools\')">' +
-          '</div>' +
-        '</div>' +
-        mobCards +
+      '<div class="tbl-toolbar">' +
+        '<div class="srch-wrap"><div class="srch-ico">'+ic('search',15)+'</div><input class="srch-inp" placeholder="Search tools..." value="'+esc(S.toolSearch||'')+'" oninput="S.toolSearch=this.value;go(\'tools\')"></div>' +
+        '<span style="font-size:12px;color:var(--muted);white-space:nowrap;">'+filtered.length+' of '+S.tools.length+'</span>' +
       '</div>' +
-      '<div class="desk-only" style="overflow-x:auto;"><table><thead><tr><th>Tool</th><th>Category</th><th>Link</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table></div>' +
+      '<div class="tbl-scroll"><table><thead><tr><th>Tool</th><th>Category</th><th>Link</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '</div>';
 }
 
@@ -881,28 +847,13 @@ function pgMats() {
   if (f) filtered = filtered.filter(function(m) { return m.assignedRole===f; });
   if (q) filtered = filtered.filter(function(m) { return (m.title||'').toLowerCase().indexOf(q)>=0 || (m.assignedRole||'').toLowerCase().indexOf(q)>=0; });
 
-  var fb = '<div class="filter-row">' +
-    '<button onclick="setMF(\'\')" class="'+(f?'btn-s':'btn-p')+'" style="padding:5px 12px;min-height:36px;font-size:13px;">All</button>' +
-    S.roles.map(function(r) { return '<button onclick="setMF(\''+esc(r.name)+'\')" class="'+(f===r.name?'btn-p':'btn-s')+'" style="padding:5px 12px;min-height:36px;font-size:13px;">'+esc(r.name)+'</button>'; }).join('') +
+  var filterPills = '<div class="filter-row">' +
+    '<button onclick="setMF(\'\')" class="'+(f?'btn-s':'btn-p')+'" style="padding:5px 12px;min-height:34px;font-size:12px;">All</button>' +
+    S.roles.map(function(r) { return '<button onclick="setMF(\''+esc(r.name)+'\')" class="'+(f===r.name?'btn-p':'btn-s')+'" style="padding:5px 12px;min-height:34px;font-size:12px;">'+esc(r.name)+'</button>'; }).join('') +
   '</div>';
 
-  var mobCards = filtered.length === 0
-    ? '<div style="padding:40px 24px;text-align:center;color:var(--muted);">'+(S.materials.length===0?'No materials yet — add your first!':'No materials match your search.')+'</div>'
-    : filtered.map(function(m) {
-        return '<div class="mob-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
-            '<p style="font-weight:600;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">'+esc(m.title)+'</p>' +
-            '<span class="badge b-purple" style="flex-shrink:0;font-size:11px;">'+esc(m.assignedRole||'—')+'</span>' +
-          '</div>' +
-          (m.link?'<a href="'+esc(m.link)+'" target="_blank" style="font-size:12px;color:var(--primary);display:inline-flex;align-items:center;gap:3px;margin-bottom:8px;">Open material '+ic('arrow-right',11)+'</a>':'') +
-          '<div style="display:grid;grid-template-columns:1fr 44px;gap:6px;">' +
-            '<button class="btn-s btn-sm" onclick="editMat(\''+m.id+'\')">'+ic('edit',13)+' Edit</button>' +
-            '<button class="btn-icon" style="color:var(--error);border:1px solid var(--border);border-radius:8px;" onclick="confirmDel(\'material\',\''+m.id+'\',\''+esc(m.title)+'\')">'+ic('trash',15)+'</button>' +
-          '</div></div>';
-      }).join('');
-
-  var deskRows = filtered.length === 0
-    ? '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted);">No materials found.</td></tr>'
+  var rows = filtered.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:48px;color:var(--muted);">'+(S.materials.length===0?'No materials yet — add your first!':'No materials found.')+'</td></tr>'
     : filtered.map(function(m) {
         return '<tr>' +
           '<td style="font-weight:500;">'+esc(m.title)+'</td>' +
@@ -919,20 +870,12 @@ function pgMats() {
       '<button class="btn-p pg-btn" onclick="addMat()">'+ic('plus',15)+' Add Material</button>' +
     '</div>' +
     '<div class="glass" style="border-radius:16px;overflow:hidden;">' +
-      '<div class="mob-only">' +
-        '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">' +
-          '<div style="position:relative;">' +
-            '<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;">'+ic('search',16)+'</div>' +
-            '<input class="inp" placeholder="Search materials..." style="padding-left:38px;" value="'+esc(S.matSearch||'')+'" oninput="S.matSearch=this.value;go(\'materials\')">' +
-          '</div>' +
-        '</div>' +
-        fb +
-        mobCards +
+      '<div class="tbl-toolbar">' +
+        '<div class="srch-wrap"><div class="srch-ico">'+ic('search',15)+'</div><input class="srch-inp" placeholder="Search materials..." value="'+esc(S.matSearch||'')+'" oninput="S.matSearch=this.value;go(\'materials\')"></div>' +
+        '<span style="font-size:12px;color:var(--muted);white-space:nowrap;">'+filtered.length+' of '+S.materials.length+'</span>' +
       '</div>' +
-      '<div class="desk-only" style="overflow-x:auto;">' +
-        fb +
-        '<table><thead><tr><th>Title</th><th>Role</th><th>Link</th><th>Actions</th></tr></thead><tbody>'+deskRows+'</tbody></table>' +
-      '</div>' +
+      filterPills +
+      '<div class="tbl-scroll"><table><thead><tr><th>Title</th><th>Role</th><th>Link</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '</div>';
 }
 function setMF(r) { S.matFilter=r; go('materials'); }
